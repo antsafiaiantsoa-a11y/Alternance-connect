@@ -30,7 +30,6 @@ type Offer = {
     source_provider: string;
     source: string;
     source_label: string;
-    source_provider: string;
     remote_mode: string | null;
 };
 

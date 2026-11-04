@@ -121,7 +121,7 @@ class JobOfferController extends Controller
             ->pluck('source_label')
             ->map(fn (string $label): array => [
                 'value' => $label,
-                'label' => $this->sourceDisplayName($label),
+                'label' => $this->sourceDisplayName($label, $label === 'company_direct' ? 'company' : 'lba'),
             ])
             ->values();
 

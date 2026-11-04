@@ -51,8 +51,9 @@ export default function CompanyDashboard({
     applications: Application[];
 }) {
     const { language, t } = useLocale();
-    const { flash } = usePage<{
+    const { flash, errors } = usePage<{
         flash: { status?: string | null; error?: string | null };
+        errors: Record<string, string>;
     }>().props;
     const countryName = (country: Country) =>
         country[`name_${language}` as 'name_fr' | 'name_en' | 'name_de'];
@@ -94,9 +95,20 @@ export default function CompanyDashboard({
                         {flash.error}
                     </p>
                 )}
+                {Object.keys(errors).length > 0 && (
+                    <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                        <p className="font-extrabold">{t('common.formErrors')}</p>
+                        <ul className="mt-2 list-inside list-disc">{Object.values(errors).map((error) => <li key={error}>{error}</li>)}</ul>
+                    </div>
+                )}
 
-                {!company ? (
+                {!company || company.verification_status === 'rejected' ? (
                     <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                        {company?.verification_note && (
+                            <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                                {t('company.status.note', { note: company.verification_note })}
+                            </p>
+                        )}
                         <h2 className="text-xl font-extrabold text-slate-900">
                             {t('company.profile.title')}
                         </h2>
@@ -104,8 +116,10 @@ export default function CompanyDashboard({
                             {t('company.profile.description')}
                         </p>
                         <form
-                            action="/entreprise"
-                            method="post"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                router.post('/entreprise', new FormData(event.currentTarget), { preserveScroll: true });
+                            }}
                             className="mt-5 grid gap-4 sm:grid-cols-2"
                         >
                             <label className="space-y-1.5 text-sm font-semibold text-slate-700">
@@ -114,6 +128,7 @@ export default function CompanyDashboard({
                                     name="name"
                                     required
                                     maxLength={160}
+                                    defaultValue={company?.name ?? ''}
                                     className="w-full rounded-xl border-slate-200 text-sm"
                                 />
                             </label>
@@ -123,6 +138,7 @@ export default function CompanyDashboard({
                                     name="registration_number"
                                     required
                                     maxLength={120}
+                                    defaultValue={company?.registration_number ?? ''}
                                     className="w-full rounded-xl border-slate-200 text-sm"
                                 />
                             </label>
@@ -131,6 +147,7 @@ export default function CompanyDashboard({
                                 <select
                                     name="country_code"
                                     required
+                                    defaultValue={company?.country_code ?? ''}
                                     className="w-full rounded-xl border-slate-200 text-sm"
                                 >
                                     <option value="" />
@@ -150,6 +167,7 @@ export default function CompanyDashboard({
                                     name="city"
                                     required
                                     maxLength={120}
+                                    defaultValue={company?.city ?? ''}
                                     className="w-full rounded-xl border-slate-200 text-sm"
                                 />
                             </label>
@@ -158,6 +176,7 @@ export default function CompanyDashboard({
                                 <input
                                     type="url"
                                     name="website"
+                                    defaultValue={company?.website ?? ''}
                                     className="w-full rounded-xl border-slate-200 text-sm"
                                 />
                             </label>
@@ -168,6 +187,7 @@ export default function CompanyDashboard({
                                     name="contact_email"
                                     required
                                     maxLength={255}
+                                    defaultValue={company?.contact_email ?? ''}
                                     className="w-full rounded-xl border-slate-200 text-sm"
                                 />
                             </label>
@@ -222,8 +242,10 @@ export default function CompanyDashboard({
                             </h2>
                             {company.verification_status === 'verified' && (
                                 <form
-                                    action="/entreprise/offres"
-                                    method="post"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        router.post('/entreprise/offres', new FormData(event.currentTarget), { preserveScroll: true });
+                                    }}
                                     className="mt-5 grid gap-4 rounded-2xl bg-slate-50 p-4 sm:grid-cols-2 sm:p-5"
                                 >
                                     <h3 className="font-extrabold text-slate-900 sm:col-span-2">

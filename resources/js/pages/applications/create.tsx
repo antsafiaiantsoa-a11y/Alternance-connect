@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Send } from 'lucide-react';
 import { useLocale } from '@/i18n/locale';
 
@@ -18,6 +18,7 @@ export default function CreateApplication({
     alreadyApplied: boolean;
 }) {
     const { t } = useLocale();
+    const { errors } = usePage<{ errors: Record<string, string> }>().props;
 
     return (
         <>
@@ -48,6 +49,12 @@ export default function CreateApplication({
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                         {t('applications.apply.description')}
                     </p>
+                    {Object.keys(errors).length > 0 && (
+                        <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                            <p className="font-extrabold">{t('common.formErrors')}</p>
+                            <ul className="mt-2 list-inside list-disc">{Object.values(errors).map((error) => <li key={error}>{error}</li>)}</ul>
+                        </div>
+                    )}
                     {alreadyApplied ? (
                         <p
                             role="status"
@@ -63,8 +70,10 @@ export default function CreateApplication({
                         </p>
                     ) : (
                         <form
-                            action={`/offres/${offer.id}/postuler`}
-                            method="post"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                router.post(`/offres/${offer.id}/postuler`, new FormData(event.currentTarget), { preserveScroll: true });
+                            }}
                             className="mt-5 space-y-4"
                         >
                             <label className="block space-y-1.5 text-sm font-semibold text-slate-700">

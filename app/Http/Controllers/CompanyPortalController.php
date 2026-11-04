@@ -18,7 +18,7 @@ class CompanyPortalController extends Controller
     public function index(Request $request): Response
     {
         $company = $request->user()->company;
-        $offers = $company?->offers()->latest()->limit(100)->get()
+        $offers = $company?->offers()->withCount('applications')->latest()->limit(100)->get()
             ->map(fn (JobOffer $offer): array => [
                 'id' => $offer->id,
                 'title' => $offer->title,
@@ -26,7 +26,7 @@ class CompanyPortalController extends Controller
                 'city' => $offer->city,
                 'availability_status' => $offer->availability_status,
                 'moderation_status' => $offer->moderation_status,
-                'applications_count' => $offer->applications()->count(),
+                'applications_count' => $offer->applications_count,
                 'published_at' => $offer->published_at?->toIso8601String(),
             ])->all() ?? [];
 
@@ -68,7 +68,8 @@ class CompanyPortalController extends Controller
 
     public function storeProfile(Request $request): RedirectResponse
     {
-        if ($request->user()->company()->exists()) {
+        $existing = $request->user()->company;
+        if ($existing && $existing->verification_status !== 'rejected') {
             return back()->with('error', 'Une fiche entreprise existe déjà pour ce compte. Contacte l’équipe si tu dois corriger ses informations légales.');
         }
 
@@ -78,7 +79,9 @@ class CompanyPortalController extends Controller
                 'required',
                 'string',
                 'max:120',
-                Rule::unique('companies', 'registration_number')->where('country_code', strtoupper((string) $request->input('country_code'))),
+                Rule::unique('companies', 'registration_number')
+                    ->where('country_code', strtoupper((string) $request->input('country_code')))
+                    ->ignore($existing?->id),
             ],
             'country_code' => ['required', 'string', 'size:2', 'exists:countries,code'],
             'city' => ['required', 'string', 'max:120'],
@@ -88,11 +91,18 @@ class CompanyPortalController extends Controller
         ]);
         unset($data['privacy_notice_accepted']);
 
-        $request->user()->company()->create([
+        $profile = [
             ...$data,
             'verification_status' => 'pending',
+            'verification_note' => null,
+            'verified_at' => null,
             'privacy_notice_accepted_at' => now(),
-        ]);
+        ];
+        if ($existing) {
+            $existing->update($profile);
+        } else {
+            $request->user()->company()->create($profile);
+        }
 
         return back()->with('status', 'La demande de vérification de l’entreprise a été envoyée.');
     }

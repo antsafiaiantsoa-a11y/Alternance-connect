@@ -14,6 +14,7 @@ type MessageValues = Record<string, string | number>;
 
 const messages: Record<Language, Record<string, string>> = {
     fr: {
+        'common.formErrors': 'Vérifie les champs du formulaire :',
         'language.label': 'Langue du site',
         'home.brand.alt': 'Alternance Connect, trouver une alternance',
         'home.title': 'Trouve l’alternance qui te ressemble',
@@ -361,6 +362,7 @@ const messages: Record<Language, Record<string, string>> = {
             'Un nouveau lien de confirmation a été envoyé à ton adresse e-mail.',
     },
     en: {
+        'common.formErrors': 'Check the form fields:',
         'language.label': 'Site language',
         'home.brand.alt': 'Alternance Connect, find an apprenticeship',
         'home.title': 'Find an apprenticeship that fits you',
@@ -700,6 +702,7 @@ const messages: Record<Language, Record<string, string>> = {
             'A new confirmation link was sent to your email address.',
     },
     de: {
+        'common.formErrors': 'Bitte überprüfe die Formularfelder:',
         'language.label': 'Seitensprache',
         'home.brand.alt': 'Alternance Connect, finde eine Ausbildung',
         'home.title': 'Finde die Ausbildung, die zu dir passt',
